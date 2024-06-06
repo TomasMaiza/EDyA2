@@ -1,0 +1,6 @@
+--tipo
+--def rango
+--invariante leftist
+--propiedades
+--merge (rank, makeH)
+--insert, findMin, deleteMin
