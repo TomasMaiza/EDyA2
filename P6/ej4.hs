@@ -28,6 +28,6 @@ filterT p (N l x r) = let (l', r') = filterT p l ||| filterT p r
 --c
 quicksortT :: T Int -> T Int
 quicksortT E = E
-quicksortT t@(N l x r) = let (menorx, mayorx) = filterT (<= x) t ||| filterT (> x) t
+quicksortT t@(N l x r) = let (menorx, mayorx) = filterT (< x) t ||| filterT (> x) t
                              (qmenor, qmayor) = quicksortT menorx ||| quicksortT mayorx
-                         in combinar qmenor qmayor
+                         in N qmenor x qmayor
