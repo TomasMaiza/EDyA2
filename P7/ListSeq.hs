@@ -10,7 +10,7 @@ singleton x = [x]
 
 length' :: [a] -> Int
 length' [] = 0
-length' (x:xs) = length xs
+length' (x:xs) = 1 + length' xs
 
 nth :: [a] -> Int -> a
 nth [] _ = error "Lista vacia o indice invalido"
