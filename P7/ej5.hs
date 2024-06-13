@@ -13,15 +13,32 @@ s3 = [1, 4, 6, 7, 8, 11, 13, 3] --6
 
 --a
 sccml :: Seq s => s Int -> Int
-sccml s = let (_, _, n) = reduceS combine val (mapS base s)
+sccml s = let (_, _, _, n) = reduceS combine val (mapS base s)
           in n
             where
-              val = (0, 0, 0)
+              val = (0, 0, 0, 0)
 
-              base v = (v, 0, 0)
+              base v = (v, v, 0, 0)
 
-              combine (anterior, cantidad, masLargo) (v, _, _) = if v > anterior
-                                                                 then let cant = cantidad + 1
-                                                                          largo = max masLargo cant
-                                                                      in (v, cant, largo)
-                                                                 else (v, 0, masLargo)
+              combine v@(prim, ult, cant, tot) v'@(prim', ult', cant', tot') = if prim' > ult
+                                                                               then let cantidad = cant + cant' + 1
+                                                                                        total = max cantidad $ max tot tot'
+                                                                                    in (prim, ult', cantidad, total)
+                                                                               else (if cant > cant'
+                                                                                     then v
+                                                                                     else v')
+
+--b
+--sccml' :: Seq s => s Int -> Int
+sccml' s = let (sec, tot) = scan combine val (mapS base s)
+               s' = (appendS sec (singletonS tot))
+               (_, res) = scan max 0 (mapS snd s')
+           in res
+            where
+              val = (0, 0)
+
+              base v = (v, 0)
+
+              combine x@(ult, cant) y@(ult', cant') = if ult' > ult
+                                                      then (ult', cant' + cant + 1)
+                                                      else y
