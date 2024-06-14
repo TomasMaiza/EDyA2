@@ -47,34 +47,33 @@ collect xs = let
                                             then takeS xs (lengthS xs - 1) `appendS` singletonS (fst lastXS, snd lastXS `appendS` snd headYS) `appendS` dropS ys 1
                                             else xs `appendS` ys
 
-s1 = [1, 1, 2, 3, 4, 2, 5, 2, 6, 6] :: [Int]
+--c
+s1 = [(3, 'a'), (2, 'b'), (11, 'd'), (15, 'c'), (2, 'e'), (7, 'j'), (4, 'k'), (3, 'n')]
+s2 = [(1, 'z'), (2, 'j'), (13, 'f'), (16, 'h'), (7, 'n')]
 
-index :: Seq s => s a -> s (a, Int)
-index s = tabulateS (\n -> (nthS s n, n)) (lengthS s)
+data MHeap a = E | N (MHeap a) a (MHeap a) deriving Show
 
-uniquify :: Seq s => s Int -> s Int
-uniquify s = let apv = index s
-                 cl = collect apv
-                 mapeado = mapS (\(x, xs) -> (nthS xs 0, x)) cl
-                 sorted = sort ord mapeado
-              in mapS snd sorted
-                where
-                  ord (a,b) (c,d) = compare a c
+fromSeq :: (Ord k, Seq s) => s (k, v) -> MHeap (k, v)
+fromSeq s = let c = collect s
+                s' = mapS (\(x, sec) -> (x, nthS sec 0)) c
+            in makeTree s'
+              where
+                makeTree s' | lengthS s' == 0 = E
+                            | otherwise = let len = lengthS s' - 1
+                                              mitad = div len 2 + 1
+                                              t1 = dropS (takeS s' mitad) 1
+                                              t2 = dropS s' mitad
+                                              (l', r') = makeTree t1 ||| makeTree t2
+                                          in N l' (nthS s' 0) r'
 
---b
-s2 = "acdeaafaaa"
+--dyc s = reduce combine val (mapS base s)
 
-makeTupla :: (Char, Char) -> Int
-makeTupla (c, d) = if c == 'a' && d == 'a' then 1 else 0
-
-combine :: (Int, Int) -> (Int, Int) -> (Int, Int)
-combine (x, m) (0, n) = (0, max m $ max x n)
-combine (x, m) (y, n) = (x + y, max m $ max n (x + y))
-
-aa :: Seq s => s Char -> Int
-aa s = let pares = tabulateS (\n -> (nthS s n, nthS s (n + 1))) (lengthS s - 1) 
-           sec = mapS makeTupla pares
-           m = reduceS (+) 0 sec
-       in m
-
-
+unir :: Ord k => MHeap (k, v) -> MHeap (k, v) -> MHeap (k, v)
+unir E t = t
+unir t E = t
+unir t1@(N l1 (k1, v1) r1) t2@(N l2 (k2, v2) r2) | k1 == k2 = let (l, r) = unir l1 l2 ||| unir r1 r2
+                                                              in N l (k1, v1) r
+                                                 | k1 > k2 = let r = unir t1 r2
+                                                             in N l2 (k2, v2) r
+                                                 | otherwise = let r = unir r1 t2
+                                                               in N l1 (k1, v1) r
